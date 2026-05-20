@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUNDIÉ - Luxury Fashion</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --black: #0a0a0a; --dark: #1a1a1a; --dark2: #222;
+            --gold: #c9a96e; --gold-light: #e8d5a3;
+            --white: #f5f5f5; --gray: #888;
+        }
+        body { font-family: 'Georgia', serif; background: var(--black); color: var(--white); }
+        a { text-decoration: none; color: inherit; }
+        button { cursor: pointer; border: none; font-family: inherit; }
+        input, select, textarea { font-family: inherit; }
+
+        /* NAVBAR */
+        .navbar {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 60px; background: rgba(10,10,10,0.95); backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(201,169,110,0.2);
+        }
+        .navbar .logo { font-size: 28px; letter-spacing: 8px; color: var(--gold); font-weight: bold; }
+        .navbar nav a { margin-left: 40px; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--white); transition: color 0.3s; }
+        .navbar nav a:hover { color: var(--gold); }
+        .nav-icons a { margin-left: 20px; font-size: 18px; }
+        .cart-count { background: var(--gold); color: var(--black); font-size: 10px; padding: 2px 6px; border-radius: 50%; position: relative; top: -8px; left: -5px; }
+
+        /* HERO */
+        .hero {
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            text-align: center; background: linear-gradient(135deg, var(--black) 0%, var(--dark) 50%, var(--black) 100%);
+            position: relative;
+        }
+        .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(201,169,110,0.05) 0%, transparent 70%); }
+        .hero h1 { font-size: 72px; letter-spacing: 20px; color: var(--gold); margin-bottom: 20px; }
+        .hero p { font-size: 16px; letter-spacing: 6px; color: var(--gray); margin-bottom: 40px; text-transform: uppercase; }
+        .btn-gold { padding: 16px 50px; background: transparent; border: 1px solid var(--gold); color: var(--gold); font-size: 13px; letter-spacing: 4px; text-transform: uppercase; transition: all 0.4s; display: inline-block; }
+        .btn-gold:hover { background: var(--gold); color: var(--black); }
+
+        /* SECTIONS */
+        section { padding: 100px 60px; }
+        .section-title { text-align: center; margin-bottom: 60px; }
+        .section-title h2 { font-size: 36px; letter-spacing: 8px; color: var(--gold); margin-bottom: 10px; }
+        .section-title p { color: var(--gray); letter-spacing: 3px; font-size: 13px; text-transform: uppercase; }
+
+        /* ABOUT */
+        .about { background: var(--dark); text-align: center; }
+        .about-content { max-width: 800px; margin: 0 auto; }
+        .about-content p { line-height: 2; color: var(--gray); font-size: 15px; margin-bottom: 20px; }
+        .about-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 50px; }
+        .about-feature { text-align: center; }
+        .about-feature i { font-size: 30px; color: var(--gold); margin-bottom: 15px; }
+        .about-feature h4 { letter-spacing: 3px; font-size: 13px; margin-bottom: 8px; color: var(--white); }
+        .about-feature p { font-size: 12px; color: var(--gray); line-height: 1.6; }
+
+        /* PRODUCTS */
+        .products-grid { display: flex; justify-content: center; gap: 40px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
+        .product-card { background: var(--dark); border: 1px solid rgba(201,169,110,0.15); transition: all 0.4s; cursor: pointer; overflow: hidden; width: 380px; max-width: 100%; }
+        .product-card:hover { border-color: var(--gold); transform: translateY(-5px); }
+
+        /* FIX: product-img sekarang pakai <img> tag */
+        .product-img { width: 100%; height: 380px; background: var(--dark2); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .product-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .product-img .fallback-icon { font-size: 80px; opacity: 0.4; }
+
+        .product-info { padding: 25px; }
+        .product-info h3 { font-size: 18px; letter-spacing: 3px; margin-bottom: 8px; }
+        .product-info .price { color: var(--gold); font-size: 16px; letter-spacing: 2px; }
+
+        /* MODAL OVERLAY */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--dark); border: 1px solid rgba(201,169,110,0.3); max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-close { position: absolute; top: 20px; right: 20px; background: none; color: var(--white); font-size: 24px; z-index: 10; }
+
+        /* PRODUCT DETAIL */
+        .product-detail { display: grid; grid-template-columns: 1fr 1fr; }
+        .product-detail-img { height: 100%; min-height: 400px; background: var(--dark2); display: flex; align-items: center; justify-content: center; font-size: 120px; opacity: 0.4; }
+        .product-detail-info { padding: 50px 40px; display: flex; flex-direction: column; justify-content: center; }
+        .product-detail-info h2 { font-size: 28px; letter-spacing: 5px; margin-bottom: 15px; }
+        .product-detail-info .price { color: var(--gold); font-size: 22px; letter-spacing: 3px; margin-bottom: 20px; }
+        .product-detail-info .desc { color: var(--gray); line-height: 1.8; font-size: 14px; margin-bottom: 30px; }
+        .size-options { display: flex; gap: 10px; margin-bottom: 30px; }
+        .size-btn { width: 42px; height: 42px; border: 1px solid var(--gray); background: none; color: var(--white); font-size: 13px; transition: all 0.3s; }
+        .size-btn.active, .size-btn:hover { border-color: var(--gold); color: var(--gold); }
+        .btn-buy { padding: 16px 40px; background: var(--gold); color: var(--black); font-size: 13px; letter-spacing: 4px; text-transform: uppercase; font-weight: bold; transition: opacity 0.3s; }
+        .btn-buy:hover { opacity: 0.85; }
+
+        /* SLIDER */
+        .slider-wrapper { position: relative; overflow: hidden; background: var(--dark2); height: 100%; min-height: 400px; }
+        .slider-track { display: flex; height: 100%; transition: transform 0.4s ease; cursor: grab; }
+        .slider-track:active { cursor: grabbing; }
+
+        /* FIX: slider-slide sekarang pakai <img> tag */
+        .slider-slide { min-width: 100%; height: 100%; min-height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden; user-select: none; }
+        .slider-slide img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        .slider-slide .fallback-icon { font-size: 120px; opacity: 0.5; }
+
+        .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(201,169,110,0.2); border: none; color: var(--gold); width: 40px; height: 40px; font-size: 16px; cursor: pointer; transition: background 0.3s; }
+        .slider-btn:hover { background: rgba(201,169,110,0.5); }
+        .slider-prev { left: 10px; }
+        .slider-next { right: 10px; }
+        .slider-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: background 0.3s; }
+        .dot.active { background: var(--gold); }
+
+        /* CHECKOUT FORM */
+        .checkout-container { padding: 50px 40px; }
+        .checkout-container h2 { font-size: 24px; letter-spacing: 5px; color: var(--gold); margin-bottom: 30px; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gray); margin-bottom: 8px; }
+        .form-group input, .form-group select { width: 100%; padding: 14px 16px; background: var(--black); border: 1px solid rgba(201,169,110,0.3); color: var(--white); font-size: 14px; outline: none; transition: border-color 0.3s; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .order-summary { background: var(--black); border: 1px solid rgba(201,169,110,0.2); padding: 25px; margin-bottom: 30px; }
+        .order-summary h3 { font-size: 14px; letter-spacing: 3px; color: var(--gold); margin-bottom: 15px; }
+        .order-summary .item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; color: var(--gray); }
+        .order-summary .total { display: flex; justify-content: space-between; padding-top: 15px; border-top: 1px solid rgba(201,169,110,0.2); margin-top: 10px; color: var(--gold); font-size: 16px; letter-spacing: 2px; }
+        .payment-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .payment-opt { padding: 16px; border: 1px solid rgba(201,169,110,0.2); background: var(--black); color: var(--white); font-size: 13px; text-align: center; letter-spacing: 2px; transition: all 0.3s; cursor: pointer; }
+        .payment-opt.active, .payment-opt:hover { border-color: var(--gold); color: var(--gold); }
+        .btn-pay { margin-top: 30px; width: 100%; padding: 18px; background: var(--gold); color: var(--black); font-size: 14px; letter-spacing: 4px; text-transform: uppercase; font-weight: bold; transition: opacity 0.3s; }
+        .btn-pay:hover { opacity: 0.85; }
+
+        /* RECEIPT */
+        .receipt-container { padding: 50px 40px; }
+        .receipt { background: var(--white); color: var(--black); padding: 40px; max-width: 600px; margin: 0 auto; }
+        .receipt-header { text-align: center; border-bottom: 2px solid var(--black); padding-bottom: 20px; margin-bottom: 25px; }
+        .receipt-header h2 { font-size: 28px; letter-spacing: 8px; color: var(--black); }
+        .receipt-header p { font-size: 11px; letter-spacing: 3px; color: #555; margin-top: 5px; }
+        .receipt-section { margin-bottom: 20px; }
+        .receipt-section h4 { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #555; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .receipt-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+        .receipt-row.total { font-size: 16px; font-weight: bold; border-top: 2px solid var(--black); padding-top: 12px; margin-top: 10px; }
+        .receipt-barcode { text-align: center; margin-top: 25px; font-family: monospace; font-size: 11px; letter-spacing: 4px; color: #555; }
+        .receipt-barcode .bars { font-size: 28px; letter-spacing: -2px; color: var(--black); }
+        .shipping-info { background: #f0ead6; padding: 20px; margin-top: 20px; border-left: 4px solid var(--gold); }
+        .shipping-info h4 { font-size: 12px; letter-spacing: 2px; margin-bottom: 10px; color: var(--black); }
+        .shipping-info p { font-size: 12px; color: #333; line-height: 1.8; }
+        .btn-done { margin: 30px auto 0; display: block; padding: 16px 50px; background: transparent; border: 1px solid var(--gold); color: var(--gold); font-size: 13px; letter-spacing: 4px; text-transform: uppercase; transition: all 0.3s; }
+        .btn-done:hover { background: var(--gold); color: var(--black); }
+
+        /* TOAST */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: var(--gold); color: var(--black); padding: 14px 28px; font-size: 13px; letter-spacing: 2px; transform: translateY(100px); opacity: 0; transition: all 0.4s; z-index: 3000; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        /* FOOTER */
+        footer { text-align: center; padding: 40px; border-top: 1px solid rgba(201,169,110,0.2); color: var(--gray); font-size: 12px; letter-spacing: 3px; }
+
+        /* RESPONSIVE */
+        @media(max-width: 768px) {
+            .navbar { padding: 15px 20px; }
+            .navbar nav { display: none; }
+            .hero h1 { font-size: 36px; letter-spacing: 10px; }
+            section { padding: 60px 20px; }
+            .products-grid { grid-template-columns: 1fr; }
+            .about-features { grid-template-columns: 1fr; }
+            .product-detail { grid-template-columns: 1fr; }
+            .product-detail-img { min-height: 250px; }
+            .form-row { grid-template-columns: 1fr; }
+            .payment-options { grid-template-columns: 1fr; }
+            .receipt { padding: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <div class="logo">MUNDIÉ</div>
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#collection">Collection</a>
+    </nav>
+    <div class="nav-icons">
+        <a href="#collection"><i class="fas fa-shopping-bag"></i></a>
+    </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="home">
+    <div>
+        <h1>MUNDIÉ</h1>
+        <p>Where Luxury Meets Modern Elegance</p>
+        <a href="#collection" class="btn-gold">Explore Collection</a>
+    </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+    <div class="section-title">
+        <h2>OUR STORY</h2>
+        <p>Crafted with passion since 2024</p>
+    </div>
+    <div class="about-content">
+        <p>MUNDIÉ PROJECT hadir sebagai jawaban yang berfokus pada clothes dengan model boxy sesuai dengan tren yang ada saat ini, dengan konsep luxury dan scarce, pengambilan konsep ini berdasarkan pengalaman pribadi dimana tidak semua orang memiliki fashion dengan design tersebut.</p>
+        <p>Kami percaya bahwa pakaian bukan hanya penutup tubuh, melainkan ekspresi dari kepribadian dan status. MUNDIÉ hadir untuk mereka yang menghargai kualitas tanpa kompromi.</p>
+        <div class="about-features">
+            <div class="about-feature">
+                <i class="fas fa-gem"></i>
+                <h4>PREMIUM QUALITY</h4>
+                <p>Material pilihan terbaik dari seluruh dunia</p>
+            </div>
+            <div class="about-feature">
+                <i class="fas fa-cut"></i>
+                <h4>HANDCRAFTED</h4>
+                <p>Dijahit tangan oleh pengrajin berpengalaman</p>
+            </div>
+            <div class="about-feature">
+                <i class="fas fa-truck"></i>
+                <h4>GUARANTEED DELIVERY</h4>
+                <p>Pengiriman aman ke seluruh Indonesia</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PRODUCTS -->
+<section id="collection">
+    <div class="section-title">
+        <h2>COLLECTION</h2>
+        <p>Curated pieces for the distinguished</p>
+    </div>
+    <div class="products-grid" id="productsGrid"></div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" style="background: var(--dark);">
+    <div class="section-title">
+        <h2>CONTACT US</h2>
+        <p>We'd love to hear from you</p>
+    </div>
+    <div style="max-width:800px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:40px;text-align:center;">
+        <div>
+            <i class="fas fa-map-marker-alt" style="font-size:24px;color:var(--gold);margin-bottom:15px;"></i>
+            <h4 style="font-size:12px;letter-spacing:3px;margin-bottom:8px;">ALAMAT</h4>
+            <p style="color:var(--gray);font-size:13px;line-height:1.8;">Semarang, Jawa Tengah, Indonesia</p>
+        </div>
+        <div>
+            <i class="fas fa-phone" style="font-size:24px;color:var(--gold);margin-bottom:15px;"></i>
+            <h4 style="font-size:12px;letter-spacing:3px;margin-bottom:8px;">TELEPON</h4>
+            <p style="color:var(--gray);font-size:13px;line-height:1.8;">+62 822-2545-7724</p>
+        </div>
+        <div>
+            <i class="fas fa-envelope" style="font-size:24px;color:var(--gold);margin-bottom:15px;"></i>
+            <h4 style="font-size:12px;letter-spacing:3px;margin-bottom:8px;">EMAIL</h4>
+            <p style="color:var(--gray);font-size:13px;line-height:1.8;">mundieproject@gmail.com</p>
+        </div>
+    </div>
+    <div style="text-align:center;margin-top:50px;">
+        <a href="https://www.instagram.com/mundieproject" style="margin:0 15px;font-size:20px;color:var(--gold);"><i class="fab fa-instagram"></i></a>
+        <a href="https://www.tiktok.com/@mundieproject" style="margin:0 15px;font-size:20px;color:var(--gold);"><i class="fab fa-tiktok"></i></a>
+        <a href="https://wa.me/6282225457724" style="margin:0 15px;font-size:20px;color:var(--gold);"><i class="fab fa-whatsapp"></i></a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <p>&copy; 2026 MUNDIÉ. ALL RIGHTS RESERVED.</p>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const products = [
+    { 
+        id: 1, 
+        name: "MUNDIÉ Signature Shirt", 
+        price: 117428, 
+        img: "assets/bg.jpeg",
+        imgs: [
+            "assets/bg.jpeg",
+            "assets/display.jpeg",
+            "assets/depan.jpeg",
+            "assets/display%202.jpeg"
+        ],
+        desc: "Boxy Shirt MUNDIÉ dengan desain eksklusif dan material premium. Potongan modern yang memberikan kesan elegan dan sophisticated untuk setiap kesempatan. 100% cotton pilihan dengan detail jahitan tangan.", 
+        sizes: ["S","M","L","XL","XXL"] 
+    },
+];
+
+let selectedProduct = null;
+let selectedSize = "";
+let selectedPayment = "";
+
+function formatPrice(p) { return "Rp " + p.toLocaleString("id-ID"); }
+
+// ✅ FIX: Helper untuk membuat elemen gambar dengan fallback icon jika gagal load
+function imgTag(src, alt, cls) {
+    return `<img 
+        src="${src}" 
+        alt="${alt || 'MUNDIÉ Product'}" 
+        class="${cls || ''}"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        style="width:100%;height:100%;object-fit:cover;display:block;"
+    /><span class="fallback-icon" style="display:none;">👔</span>`;
+}
+
+// ✅ FIX: renderProducts sekarang menggunakan <img> tag yang benar
+function renderProducts() {
+    document.getElementById("productsGrid").innerHTML = products.map(p => `
+        <div class="product-card" onclick="openProduct(${p.id})">
+            <div class="product-img">
+                ${imgTag(p.img, p.name)}
+            </div>
+            <div class="product-info">
+                <h3>${p.name}</h3>
+                <div class="price">${formatPrice(p.price)}</div>
+            </div>
+        </div>
+    `).join("");
+}
+
+function openModal(html) {
+    document.getElementById("modalContent").innerHTML = html;
+    document.getElementById("modalOverlay").classList.add("active");
+    document.body.style.overflow = "hidden";
+}
+function closeModal() {
+    document.getElementById("modalOverlay").classList.remove("active");
+    document.body.style.overflow = "";
+}
+
+// ✅ FIX: Slider slide sekarang menggunakan <img> tag yang benar
+function openProduct(id) {
+    selectedProduct = products.find(p => p.id === id);
+    selectedSize = "";
+    const imgs = selectedProduct.imgs;
+    openModal(`
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="product-detail">
+            <div class="slider-wrapper">
+                <div class="slider-track" id="sliderTrack">
+                    ${imgs.map(img => `
+                        <div class="slider-slide">
+                            ${imgTag(img, selectedProduct.name)}
+                        </div>
+                    `).join("")}
+                </div>
+                <button class="slider-btn slider-prev" onclick="slideMove(-1)"><i class="fas fa-chevron-left"></i></button>
+                <button class="slider-btn slider-next" onclick="slideMove(1)"><i class="fas fa-chevron-right"></i></button>
+                <div class="slider-dots">
+                    ${imgs.map((_, i) => `<span class="dot ${i===0?'active':''}" onclick="slideTo(${i})"></span>`).join("")}
+                </div>
+            </div>
+            <div class="product-detail-info">
+                <h2>${selectedProduct.name}</h2>
+                <div class="price">${formatPrice(selectedProduct.price)}</div>
+                <p class="desc">${selectedProduct.desc}</p>
+                <label style="font-size:11px;letter-spacing:3px;color:var(--gray);margin-bottom:10px;display:block;">PILIH UKURAN</label>
+                <div class="size-options">
+                    ${selectedProduct.sizes.map(s => `<button class="size-btn" onclick="selectSize('${s}', this)">${s}</button>`).join("")}
+                </div>
+                <button class="btn-buy" onclick="goToCheckout()">BELI SEKARANG</button>
+            </div>
+        </div>
+    `);
+    currentSlide = 0;
+    initSliderTouch();
+}
+
+let currentSlide = 0;
+function slideMove(dir) {
+    const track = document.getElementById("sliderTrack");
+    const total = track.children.length;
+    currentSlide = (currentSlide + dir + total) % total;
+    updateSlider();
+}
+function slideTo(i) { currentSlide = i; updateSlider(); }
+function updateSlider() {
+    const track = document.getElementById("sliderTrack");
+    track.style.transform = `translateX(-${currentSlide * 100}%)`;
+    document.querySelectorAll(".slider-dots .dot").forEach((d, i) => d.classList.toggle("active", i === currentSlide));
+}
+function initSliderTouch() {
+    const track = document.getElementById("sliderTrack");
+    let startX = 0, diff = 0;
+    track.addEventListener("touchstart", e => { startX = e.touches[0].clientX; });
+    track.addEventListener("touchmove", e => { diff = e.touches[0].clientX - startX; });
+    track.addEventListener("touchend", () => { if (Math.abs(diff) > 50) { slideMove(diff > 0 ? -1 : 1); } diff = 0; });
+    let dragging = false;
+    track.addEventListener("mousedown", e => { dragging = true; startX = e.clientX; diff = 0; e.preventDefault(); });
+    track.addEventListener("mousemove", e => { if (dragging) diff = e.clientX - startX; });
+    track.addEventListener("mouseup", () => { if (dragging) { if (Math.abs(diff) > 50) slideMove(diff > 0 ? -1 : 1); dragging = false; diff = 0; } });
+    track.addEventListener("mouseleave", () => { dragging = false; diff = 0; });
+}
+
+function selectSize(size, el) {
+    selectedSize = size;
+    document.querySelectorAll(".size-btn").forEach(b => b.classList.remove("active"));
+    el.classList.add("active");
+}
+
+function goToCheckout() {
+    if (!selectedSize) { showToast("Pilih ukuran terlebih dahulu"); return; }
+    openModal(`
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="checkout-container">
+            <h2>CHECKOUT</h2>
+            <div class="order-summary">
+                <h3>RINGKASAN PESANAN</h3>
+                <div class="item"><span>${selectedProduct.name} (${selectedSize})</span><span>${formatPrice(selectedProduct.price)}</span></div>
+                <div class="item"><span>Ongkos Kirim</span><span>GRATIS</span></div>
+                <div class="total"><span>TOTAL</span><span>${formatPrice(selectedProduct.price)}</span></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Nama Lengkap</label><input type="text" id="cName" placeholder="John Doe"></div>
+                <div class="form-group"><label>No. Handphone</label><input type="tel" id="cPhone" placeholder="08xxxxxxxxxx"></div>
+            </div>
+            <div class="form-group"><label>Email</label><input type="email" id="cEmail" placeholder="email@example.com"></div>
+            <div class="form-group"><label>Alamat Lengkap</label><input type="text" id="cAddress" placeholder="Jl. Contoh No. 123, Kota, Provinsi"></div>
+            <div class="form-group">
+                <label>Metode Pembayaran</label>
+                <div class="payment-options">
+                    <div class="payment-opt" onclick="selectPayment('BCA Transfer', this)">BCA Transfer</div>
+                    <div class="payment-opt" onclick="selectPayment('Mandiri Transfer', this)">Mandiri Transfer</div>
+                    <div class="payment-opt" onclick="selectPayment('GoPay', this)">GoPay</div>
+                    <div class="payment-opt" onclick="selectPayment('OVO', this)">OVO</div>
+                </div>
+            </div>
+            <button class="btn-pay" onclick="processPayment()">BAYAR SEKARANG</button>
+        </div>
+    `);
+}
+
+function selectPayment(method, el) {
+    selectedPayment = method;
+    document.querySelectorAll(".payment-opt").forEach(b => b.classList.remove("active"));
+    el.classList.add("active");
+}
+
+function processPayment() {
+    const name = document.getElementById("cName").value.trim();
+    const phone = document.getElementById("cPhone").value.trim();
+    const email = document.getElementById("cEmail").value.trim();
+    const address = document.getElementById("cAddress").value.trim();
+    if (!name || !phone || !email || !address) { showToast("Lengkapi semua data"); return; }
+    if (!selectedPayment) { showToast("Pilih metode pembayaran"); return; }
+
+    const orderNo = "MND-" + Date.now().toString().slice(-8);
+    const trackNo = "JNE" + Math.random().toString(36).substring(2, 12).toUpperCase();
+    const today = new Date();
+    const estDate = new Date(today.getTime() + 3 * 86400000);
+    const formatDate = d => d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+
+    openModal(`
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="receipt-container">
+            <div class="receipt">
+                <div class="receipt-header">
+                    <h2>MUNDIÉ</h2>
+                    <p>INVOICE & SHIPPING RECEIPT</p>
+                </div>
+                <div class="receipt-section">
+                    <h4>Detail Pesanan</h4>
+                    <div class="receipt-row"><span>No. Order</span><span>${orderNo}</span></div>
+                    <div class="receipt-row"><span>Tanggal</span><span>${formatDate(today)}</span></div>
+                    <div class="receipt-row"><span>Status</span><span style="color:green;">✓ LUNAS</span></div>
+                </div>
+                <div class="receipt-section">
+                    <h4>Produk</h4>
+                    <div class="receipt-row"><span>${selectedProduct.name}</span><span>${formatPrice(selectedProduct.price)}</span></div>
+                    <div class="receipt-row"><span>Ukuran: ${selectedSize}</span><span></span></div>
+                    <div class="receipt-row"><span>Ongkos Kirim</span><span>GRATIS</span></div>
+                    <div class="receipt-row total"><span>TOTAL</span><span>${formatPrice(selectedProduct.price)}</span></div>
+                </div>
+                <div class="receipt-section">
+                    <h4>Pembayaran</h4>
+                    <div class="receipt-row"><span>Metode</span><span>${selectedPayment}</span></div>
+                </div>
+                <div class="receipt-section">
+                    <h4>Data Pembeli</h4>
+                    <div class="receipt-row"><span>Nama</span><span>${name}</span></div>
+                    <div class="receipt-row"><span>Telepon</span><span>${phone}</span></div>
+                    <div class="receipt-row"><span>Email</span><span>${email}</span></div>
+                    <div class="receipt-row"><span>Alamat</span><span style="text-align:right;max-width:250px;">${address}</span></div>
+                </div>
+                <div class="shipping-info">
+                    <h4>📦 INFORMASI PENGIRIMAN</h4>
+                    <p><strong>Kurir:</strong> JNE Regular<br>
+                    <strong>No. Resi:</strong> ${trackNo}<br>
+                    <strong>Estimasi Tiba:</strong> ${formatDate(estDate)}<br>
+                    <strong>Dikirim ke:</strong> ${address}</p>
+                </div>
+                <div class="receipt-barcode">
+                    <div class="bars">|||||||||||||||||||||||||||||||</div>
+                    ${trackNo}
+                </div>
+            </div>
+            <button class="btn-done" onclick="closeModal()">SELESAI</button>
+        </div>
+    `);
+}
+
+function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+document.getElementById("modalOverlay").addEventListener("click", function(e) {
+    if (e.target === this) closeModal();
+});
+
+renderProducts();
+
+
+</script>
+</body>
+</html>
