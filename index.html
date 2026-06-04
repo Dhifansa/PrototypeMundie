@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -5,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MUNDIÉ - Luxury Fashion</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -27,8 +30,15 @@
         .navbar .logo { font-size: 28px; letter-spacing: 8px; color: var(--gold); font-weight: bold; }
         .navbar nav a { margin-left: 40px; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--white); transition: color 0.3s; }
         .navbar nav a:hover { color: var(--gold); }
-        .nav-icons a { margin-left: 20px; font-size: 18px; }
-        .cart-count { background: var(--gold); color: var(--black); font-size: 10px; padding: 2px 6px; border-radius: 50%; position: relative; top: -8px; left: -5px; }
+        .nav-icons { display: flex; align-items: center; gap: 15px; }
+        .nav-icons a { font-size: 18px; color: var(--white); transition: color 0.3s; }
+        .nav-icons a:hover { color: var(--gold); }
+        .btn-verify-nav {
+            padding: 8px 20px; border: 1px solid var(--gold); background: transparent;
+            color: var(--gold); font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+            transition: all 0.3s; cursor: pointer;
+        }
+        .btn-verify-nav:hover { background: var(--gold); color: var(--black); }
 
         /* HERO */
         .hero {
@@ -62,12 +72,9 @@
         .products-grid { display: flex; justify-content: center; gap: 40px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
         .product-card { background: var(--dark); border: 1px solid rgba(201,169,110,0.15); transition: all 0.4s; cursor: pointer; overflow: hidden; width: 380px; max-width: 100%; }
         .product-card:hover { border-color: var(--gold); transform: translateY(-5px); }
-
-        /* FIX: product-img sekarang pakai <img> tag */
         .product-img { width: 100%; height: 380px; background: var(--dark2); display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .product-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .product-img .fallback-icon { font-size: 80px; opacity: 0.4; }
-
         .product-info { padding: 25px; }
         .product-info h3 { font-size: 18px; letter-spacing: 3px; margin-bottom: 8px; }
         .product-info .price { color: var(--gold); font-size: 16px; letter-spacing: 2px; }
@@ -91,16 +98,71 @@
         .btn-buy { padding: 16px 40px; background: var(--gold); color: var(--black); font-size: 13px; letter-spacing: 4px; text-transform: uppercase; font-weight: bold; transition: opacity 0.3s; }
         .btn-buy:hover { opacity: 0.85; }
 
+        /* AI SIZE RECOMMENDER inside product modal */
+        .ai-size-rec {
+            margin-bottom: 22px; border: 1px solid rgba(201,169,110,0.25);
+            background: rgba(201,169,110,0.04); padding: 18px;
+        }
+        .ai-size-rec-header {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+            cursor: pointer; user-select: none;
+        }
+        .ai-size-rec-header i { color: var(--gold); font-size: 16px; }
+        .ai-size-rec-header span { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
+        .ai-size-rec-header .ai-badge {
+            margin-left: auto; background: var(--gold); color: var(--black);
+            font-size: 9px; letter-spacing: 2px; padding: 3px 8px; font-weight: bold;
+        }
+        .ai-rec-inputs { display: flex; gap: 10px; margin-bottom: 12px; }
+        .ai-rec-inputs input {
+            flex: 1; padding: 10px 12px; background: var(--black);
+            border: 1px solid rgba(201,169,110,0.3); color: var(--white);
+            font-size: 13px; outline: none; transition: border-color 0.3s;
+        }
+        .ai-rec-inputs input:focus { border-color: var(--gold); }
+        .ai-rec-inputs input::placeholder { color: #555; font-size: 12px; }
+        .btn-ai-rec {
+            width: 100%; padding: 11px; background: transparent;
+            border: 1px solid var(--gold); color: var(--gold);
+            font-size: 11px; letter-spacing: 3px; text-transform: uppercase; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-ai-rec:hover:not(:disabled) { background: var(--gold); color: var(--black); }
+        .btn-ai-rec:disabled { opacity: 0.5; cursor: not-allowed; }
+        .ai-rec-result {
+            margin-top: 12px; padding: 14px; background: var(--black);
+            border-left: 3px solid var(--gold); display: none;
+            animation: fadeSlideIn 0.4s ease;
+        }
+        .ai-rec-result.show { display: block; }
+        @keyframes fadeSlideIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+        .ai-rec-size-badge {
+            display: inline-block; background: var(--gold); color: var(--black);
+            font-size: 22px; font-weight: bold; letter-spacing: 4px;
+            padding: 6px 20px; margin-bottom: 10px;
+        }
+        .ai-rec-explanation { font-size: 12px; color: var(--gray); line-height: 1.7; }
+        .ai-rec-apply-btn {
+            margin-top: 10px; padding: 8px 18px; background: transparent;
+            border: 1px solid rgba(201,169,110,0.4); color: var(--gold);
+            font-size: 11px; letter-spacing: 2px; text-transform: uppercase; transition: all 0.3s;
+        }
+        .ai-rec-apply-btn:hover { background: rgba(201,169,110,0.1); }
+        .ai-spinner {
+            width: 16px; height: 16px; border: 2px solid rgba(201,169,110,0.3);
+            border-top-color: var(--gold); border-radius: 50%;
+            animation: spin 0.7s linear infinite; display: none;
+        }
+        .ai-spinner.show { display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         /* SLIDER */
         .slider-wrapper { position: relative; overflow: hidden; background: var(--dark2); height: 100%; min-height: 400px; }
         .slider-track { display: flex; height: 100%; transition: transform 0.4s ease; cursor: grab; }
         .slider-track:active { cursor: grabbing; }
-
-        /* FIX: slider-slide sekarang pakai <img> tag */
         .slider-slide { min-width: 100%; height: 100%; min-height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden; user-select: none; }
         .slider-slide img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         .slider-slide .fallback-icon { font-size: 120px; opacity: 0.5; }
-
         .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(201,169,110,0.2); border: none; color: var(--gold); width: 40px; height: 40px; font-size: 16px; cursor: pointer; transition: background 0.3s; }
         .slider-btn:hover { background: rgba(201,169,110,0.5); }
         .slider-prev { left: 10px; }
@@ -139,6 +201,8 @@
         .receipt-row.total { font-size: 16px; font-weight: bold; border-top: 2px solid var(--black); padding-top: 12px; margin-top: 10px; }
         .receipt-barcode { text-align: center; margin-top: 25px; font-family: monospace; font-size: 11px; letter-spacing: 4px; color: #555; }
         .receipt-barcode .bars { font-size: 28px; letter-spacing: -2px; color: var(--black); }
+        .receipt-qr { text-align: center; margin: 20px 0; }
+        .receipt-qr p { font-size: 10px; letter-spacing: 2px; color: #777; margin-top: 8px; text-transform: uppercase; }
         .shipping-info { background: #f0ead6; padding: 20px; margin-top: 20px; border-left: 4px solid var(--gold); }
         .shipping-info h4 { font-size: 12px; letter-spacing: 2px; margin-bottom: 10px; color: var(--black); }
         .shipping-info p { font-size: 12px; color: #333; line-height: 1.8; }
@@ -151,6 +215,127 @@
 
         /* FOOTER */
         footer { text-align: center; padding: 40px; border-top: 1px solid rgba(201,169,110,0.2); color: var(--gray); font-size: 12px; letter-spacing: 3px; }
+
+        /* AI SIZE SECTION (standalone banner) */
+        .ai-size-banner {
+            background: linear-gradient(135deg, #111 0%, #1a1600 50%, #111 100%);
+            border-top: 1px solid rgba(201,169,110,0.15);
+            border-bottom: 1px solid rgba(201,169,110,0.15);
+            padding: 80px 60px;
+        }
+        .ai-size-banner-inner { max-width: 700px; margin: 0 auto; }
+        .ai-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(201,169,110,0.12); border: 1px solid rgba(201,169,110,0.3);
+            padding: 6px 16px; font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+            color: var(--gold); margin-bottom: 24px;
+        }
+        .ai-tag i { font-size: 12px; }
+        .ai-size-banner h3 { font-size: 26px; letter-spacing: 6px; color: var(--gold); margin-bottom: 12px; }
+        .ai-size-banner p { color: var(--gray); font-size: 13px; line-height: 2; margin-bottom: 36px; }
+        .ai-banner-form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 20px; }
+        .ai-banner-form .inp-wrap label { display: block; font-size: 10px; letter-spacing: 3px; color: var(--gray); margin-bottom: 8px; text-transform: uppercase; }
+        .ai-banner-form input, .ai-banner-form select {
+            width: 100%; padding: 14px 16px; background: var(--black);
+            border: 1px solid rgba(201,169,110,0.3); color: var(--white);
+            font-size: 14px; outline: none; transition: border-color 0.3s;
+        }
+        .ai-banner-form input:focus, .ai-banner-form select:focus { border-color: var(--gold); }
+        .ai-banner-form select option { background: var(--black); }
+        .btn-ai-banner {
+            padding: 14px 28px; background: var(--gold); color: var(--black);
+            font-size: 12px; letter-spacing: 3px; text-transform: uppercase; font-weight: bold;
+            transition: opacity 0.3s; white-space: nowrap; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-ai-banner:hover:not(:disabled) { opacity: 0.85; }
+        .btn-ai-banner:disabled { opacity: 0.5; cursor: not-allowed; }
+        .ai-banner-result {
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(201,169,110,0.3);
+            padding: 28px 32px; display: none; animation: fadeSlideIn 0.4s ease;
+            position: relative; overflow: hidden;
+        }
+        .ai-banner-result::before {
+            content: 'AI'; position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+            font-size: 80px; font-weight: bold; color: rgba(201,169,110,0.04); letter-spacing: 4px;
+            pointer-events: none;
+        }
+        .ai-banner-result.show { display: flex; align-items: center; gap: 32px; }
+        .result-size-big {
+            font-size: 64px; font-weight: bold; color: var(--gold); letter-spacing: 4px;
+            line-height: 1; flex-shrink: 0; font-family: Georgia, serif;
+        }
+        .result-text-wrap { flex: 1; }
+        .result-text-wrap .result-label { font-size: 10px; letter-spacing: 4px; color: var(--gray); text-transform: uppercase; margin-bottom: 8px; }
+        .result-text-wrap .result-body { font-size: 13px; color: var(--white); line-height: 1.8; }
+        .result-text-wrap .result-tip { font-size: 11px; color: var(--gray); margin-top: 8px; font-style: italic; }
+        .banner-spinner {
+            display: none; width: 24px; height: 24px;
+            border: 2px solid rgba(201,169,110,0.3); border-top-color: var(--gold);
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+        }
+        .banner-spinner.show { display: inline-block; }
+
+        /* VERIFY MODAL */
+        .verify-modal-inner { padding: 50px 40px; }
+        .verify-modal-inner h2 { text-align: center; font-size: 22px; letter-spacing: 6px; color: var(--gold); margin-bottom: 8px; }
+        .verify-modal-inner .verify-sub { text-align: center; font-size: 12px; letter-spacing: 3px; color: var(--gray); margin-bottom: 40px; text-transform: uppercase; }
+        .verify-method-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 36px; border: 1px solid rgba(201,169,110,0.3); }
+        .verify-tab { padding: 18px; text-align: center; cursor: pointer; transition: all 0.3s; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--gray); background: var(--black); }
+        .verify-tab.active { background: rgba(201,169,110,0.12); color: var(--gold); border-bottom: 2px solid var(--gold); }
+        .verify-tab i { display: block; font-size: 22px; margin-bottom: 8px; }
+        .verify-tab:first-child { border-right: 1px solid rgba(201,169,110,0.3); }
+        .verify-panel { display: none; }
+        .verify-panel.active { display: block; }
+        .qr-area { position: relative; width: 100%; max-width: 360px; margin: 0 auto; aspect-ratio: 1; background: #000; border: 2px solid rgba(201,169,110,0.4); overflow: hidden; }
+        #qrVideo { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .qr-overlay { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+        .qr-frame { width: 60%; height: 60%; position: relative; }
+        .qr-frame::before, .qr-frame::after, .qr-frame span::before, .qr-frame span::after { content: ''; position: absolute; width: 22px; height: 22px; border-color: var(--gold); border-style: solid; }
+        .qr-frame::before { top: 0; left: 0; border-width: 3px 0 0 3px; }
+        .qr-frame::after  { top: 0; right: 0; border-width: 3px 3px 0 0; }
+        .qr-frame span::before { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
+        .qr-frame span::after  { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+        .qr-scanline { position: absolute; left: 20%; right: 20%; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); animation: scanline 2s linear infinite; top: 20%; }
+        @keyframes scanline { 0% { top: 20%; opacity: 1; } 100% { top: 80%; opacity: 0.4; } }
+        .qr-status { text-align: center; margin-top: 16px; font-size: 12px; letter-spacing: 2px; color: var(--gray); min-height: 20px; }
+        .qr-hint { text-align: center; font-size: 11px; color: var(--gray); margin-top: 10px; line-height: 1.6; }
+        .btn-start-cam { display: block; margin: 20px auto 0; padding: 13px 36px; border: 1px solid var(--gold); background: transparent; color: var(--gold); font-size: 12px; letter-spacing: 3px; text-transform: uppercase; transition: all 0.3s; }
+        .btn-start-cam:hover { background: var(--gold); color: var(--black); }
+        .code-input-wrap { margin-bottom: 16px; }
+        .code-input-wrap label { display: block; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gray); margin-bottom: 10px; }
+        .code-input-row { display: flex; gap: 0; }
+        .code-input-row input { flex: 1; padding: 16px 20px; background: var(--black); border: 1px solid rgba(201,169,110,0.3); border-right: none; color: var(--white); font-size: 15px; letter-spacing: 4px; outline: none; text-transform: uppercase; transition: border-color 0.3s; }
+        .code-input-row input:focus { border-color: var(--gold); }
+        .code-input-row input::placeholder { letter-spacing: 2px; font-size: 13px; text-transform: none; color: #444; }
+        .btn-check-code { padding: 16px 28px; background: var(--gold); color: var(--black); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; transition: opacity 0.3s; }
+        .btn-check-code:hover { opacity: 0.85; }
+        .code-examples { margin-top: 16px; font-size: 11px; color: var(--gray); letter-spacing: 1px; line-height: 1.8; }
+        .code-example-chip { display: inline-block; padding: 4px 12px; border: 1px solid rgba(201,169,110,0.2); margin: 4px 4px 0 0; cursor: pointer; font-size: 11px; letter-spacing: 2px; transition: all 0.25s; color: var(--gray); }
+        .code-example-chip:hover { border-color: var(--gold); color: var(--gold); }
+        .verify-result { margin-top: 30px; padding: 28px; text-align: center; border: 1px solid rgba(201,169,110,0.2); background: var(--black); display: none; animation: fadeIn 0.4s ease; }
+        .verify-result.show { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .verify-result.result-ori { border-color: #4caf50; }
+        .verify-result.result-fake { border-color: #e53935; }
+        .verify-result.result-notfound { border-color: var(--gray); }
+        .result-icon { font-size: 50px; margin-bottom: 14px; }
+        .result-badge { display: inline-block; padding: 6px 22px; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 18px; font-weight: bold; }
+        .result-ori .result-badge  { background: rgba(76,175,80,0.15); color: #4caf50; border: 1px solid #4caf50; }
+        .result-fake .result-badge { background: rgba(229,57,53,0.15); color: #e53935; border: 1px solid #e53935; }
+        .result-notfound .result-badge { background: rgba(136,136,136,0.1); color: var(--gray); border: 1px solid var(--gray); }
+        .result-product-name { font-size: 16px; letter-spacing: 3px; color: var(--white); margin-bottom: 6px; }
+        .result-product-code { font-size: 12px; color: var(--gold); letter-spacing: 3px; margin-bottom: 14px; font-family: monospace; }
+        .result-detail { font-size: 13px; color: var(--gray); line-height: 1.8; }
+        .result-detail span { color: var(--white); }
+        .result-chip-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+        .result-chip { padding: 5px 14px; font-size: 11px; letter-spacing: 2px; border: 1px solid rgba(201,169,110,0.25); color: var(--gray); }
+        .result-chip.ok { border-color: rgba(76,175,80,0.4); color: #81c784; }
+        .verify-again-btn { margin-top: 24px; padding: 12px 32px; background: transparent; border: 1px solid var(--gold); color: var(--gold); font-size: 12px; letter-spacing: 3px; text-transform: uppercase; transition: all 0.3s; }
+        .verify-again-btn:hover { background: var(--gold); color: var(--black); }
+        .verify-loading { display: none; text-align: center; padding: 30px 0; }
+        .verify-loading.show { display: block; }
+        .spinner { width: 36px; height: 36px; border: 2px solid rgba(201,169,110,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+        .verify-loading p { font-size: 12px; letter-spacing: 3px; color: var(--gray); text-transform: uppercase; }
 
         /* RESPONSIVE */
         @media(max-width: 768px) {
@@ -165,6 +350,12 @@
             .form-row { grid-template-columns: 1fr; }
             .payment-options { grid-template-columns: 1fr; }
             .receipt { padding: 25px; }
+            .verify-modal-inner { padding: 30px 20px; }
+            .btn-verify-nav { display: none; }
+            .ai-banner-form { grid-template-columns: 1fr 1fr; }
+            .btn-ai-banner { grid-column: 1 / -1; }
+            .ai-banner-result.show { flex-direction: column; gap: 16px; text-align: center; }
+            .ai-size-banner { padding: 60px 20px; }
         }
     </style>
 </head>
@@ -179,6 +370,9 @@
         <a href="#collection">Collection</a>
     </nav>
     <div class="nav-icons">
+        <button class="btn-verify-nav" onclick="openVerifyModal()">
+            <i class="fas fa-shield-halved" style="margin-right:6px;"></i>CEK KEASLIAN
+        </button>
         <a href="#collection"><i class="fas fa-shopping-bag"></i></a>
     </div>
 </header>
@@ -213,9 +407,9 @@
                 <p>Dijahit tangan oleh pengrajin berpengalaman</p>
             </div>
             <div class="about-feature">
-                <i class="fas fa-truck"></i>
-                <h4>GUARANTEED DELIVERY</h4>
-                <p>Pengiriman aman ke seluruh Indonesia</p>
+                <i class="fas fa-shield-halved"></i>
+                <h4>AUTHENTICITY GUARANTEE</h4>
+                <p>Setiap produk dilengkapi kode verifikasi unik</p>
             </div>
         </div>
     </div>
@@ -230,8 +424,64 @@
     <div class="products-grid" id="productsGrid"></div>
 </section>
 
+<!-- ============================================================
+     AI SIZE RECOMMENDATION BANNER
+     ============================================================ -->
+<div class="ai-size-banner" id="aiSizeSection">
+    <div class="ai-size-banner-inner">
+        <div class="section-title" style="margin-bottom:36px;">
+            <div class="ai-tag"><i class="fas fa-robot"></i> POWERED BY AI</div>
+            <h2 style="font-size:28px;letter-spacing:8px;">TEMUKAN UKURAN ANDA</h2>
+            <p>Masukkan berat dan tinggi badan — AI kami akan merekomendasikan ukuran yang paling pas untuk Anda</p>
+        </div>
+
+        <div class="ai-banner-form">
+            <div class="inp-wrap">
+                <label><i class="fas fa-weight-scale" style="margin-right:6px;color:var(--gold);"></i>Berat Badan</label>
+                <input type="number" id="bannerBB" placeholder="60 kg" min="30" max="200">
+            </div>
+            <div class="inp-wrap">
+                <label><i class="fas fa-ruler-vertical" style="margin-right:6px;color:var(--gold);"></i>Tinggi Badan</label>
+                <input type="number" id="bannerTB" placeholder="170 cm" min="100" max="250">
+            </div>
+            <div class="inp-wrap">
+                <label><i class="fas fa-tshirt" style="margin-right:6px;color:var(--gold);"></i>Preferensi</label>
+                <select id="bannerFit">
+                    <option value="regular">Boxy Crop</option>
+                </select>
+            </div>
+            <button class="btn-ai-banner" id="btnBannerAI" onclick="runBannerAI()">
+                <div class="banner-spinner" id="bannerSpinner"></div>
+                <i class="fas fa-magic" id="bannerBtnIcon"></i>
+                <span id="bannerBtnText">REKOMENDASIKAN</span>
+            </button>
+        </div>
+
+        <div class="ai-banner-result" id="aiBannerResult">
+            <div class="result-size-big" id="bannerResultSize">M</div>
+            <div class="result-text-wrap">
+                <div class="result-label">Rekomendasi AI MUNDIÉ</div>
+                <div class="result-body" id="bannerResultBody"></div>
+                <div class="result-tip" id="bannerResultTip"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- VERIFY BANNER -->
+<section style="background: var(--dark); padding: 60px;">
+    <div style="max-width:700px;margin:0 auto;text-align:center;">
+        <i class="fas fa-shield-halved" style="font-size:36px;color:var(--gold);margin-bottom:20px;display:block;"></i>
+        <h3 style="font-size:20px;letter-spacing:6px;color:var(--gold);margin-bottom:12px;">VERIFIKASI KEASLIAN PRODUK</h3>
+        <p style="color:var(--gray);font-size:13px;line-height:2;margin-bottom:30px;">Setiap produk MUNDIÉ dilengkapi dengan <strong style="color:var(--white);">kode autentikasi unik</strong> yang tercetak pada label. Scan QR code atau masukkan kode produk untuk memverifikasi keaslian barang Anda.</p>
+        <button class="btn-gold" onclick="openVerifyModal()">
+            <i class="fas fa-qrcode" style="margin-right:10px;"></i>CEK KEASLIAN SEKARANG
+        </button>
+    </div>
+</section>
+
 <!-- CONTACT -->
-<section id="contact" style="background: var(--dark);">
+<section id="contact" style="background: var(--black);">
     <div class="section-title">
         <h2>CONTACT US</h2>
         <p>We'd love to hear from you</p>
@@ -265,20 +515,92 @@
     <p>&copy; 2026 MUNDIÉ. ALL RIGHTS RESERVED.</p>
 </footer>
 
-<!-- MODAL -->
+<!-- PRODUCT / CHECKOUT MODAL -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- VERIFY MODAL -->
+<div class="modal-overlay" id="verifyOverlay">
+    <div class="modal" id="verifyModalContent" style="max-width:620px;">
+        <button class="modal-close" onclick="closeVerifyModal()">&times;</button>
+        <div class="verify-modal-inner">
+            <h2>CEK KEASLIAN</h2>
+            <p class="verify-sub">Verifikasi produk MUNDIÉ Anda</p>
+            <div class="verify-method-tabs">
+                <div class="verify-tab active" id="tabQR" onclick="switchVerifyTab('qr')">
+                    <i class="fas fa-qrcode"></i>SCAN QR CODE
+                </div>
+                <div class="verify-tab" id="tabCode" onclick="switchVerifyTab('code')">
+                    <i class="fas fa-keyboard"></i>MASUKKAN KODE
+                </div>
+            </div>
+            <div class="verify-panel active" id="panelQR">
+                <div class="qr-area">
+                    <video id="qrVideo" autoplay playsinline muted></video>
+                    <canvas id="qrCanvas" style="display:none;"></canvas>
+                    <div class="qr-overlay">
+                        <div class="qr-frame"><span></span></div>
+                        <div class="qr-scanline"></div>
+                    </div>
+                </div>
+                <div class="qr-status" id="qrStatus">Kamera belum aktif</div>
+                <button class="btn-start-cam" id="btnStartCam" onclick="startCamera()">
+                    <i class="fas fa-camera" style="margin-right:8px;"></i>AKTIFKAN KAMERA
+                </button>
+                <p class="qr-hint" style="margin-top:16px;">Arahkan kamera ke QR code yang tercetak pada label produk MUNDIÉ.</p>
+            </div>
+            <div class="verify-panel" id="panelCode">
+                <div class="code-input-wrap">
+                    <label>Kode Autentikasi Produk</label>
+                    <div class="code-input-row">
+                        <input type="text" id="productCodeInput" placeholder="Contoh: MND-SS-001-A1B2" maxlength="20"
+                            oninput="this.value=this.value.toUpperCase()"
+                            onkeydown="if(event.key==='Enter') checkProductCode()">
+                        <button class="btn-check-code" onclick="checkProductCode()">
+                            <i class="fas fa-search"></i> CEK
+                        </button>
+                    </div>
+                </div>
+                <div class="code-examples">
+                    <p style="margin-bottom:6px;">Contoh kode (klik untuk isi otomatis):</p>
+                    <span class="code-example-chip" onclick="fillCode('MND-SS-001-A1B2')">MND-SS-001-A1B2</span>
+                    <span class="code-example-chip" onclick="fillCode('MND-SS-001-C3D4')">MND-SS-001-C3D4</span>
+                    <span class="code-example-chip" onclick="fillCode('FAKE-CODE-999')">FAKE-CODE-999</span>
+                </div>
+            </div>
+            <div class="verify-loading" id="verifyLoading">
+                <div class="spinner"></div>
+                <p>Memverifikasi kode...</p>
+            </div>
+            <div class="verify-result" id="verifyResult">
+                <div class="result-icon" id="resultIcon"></div>
+                <div class="result-badge" id="resultBadge"></div>
+                <div class="result-product-name" id="resultName"></div>
+                <div class="result-product-code" id="resultCode"></div>
+                <div class="result-detail" id="resultDetail"></div>
+                <div class="result-chip-row" id="resultChips"></div>
+                <br>
+                <button class="verify-again-btn" onclick="resetVerify()">
+                    <i class="fas fa-rotate-left" style="margin-right:6px;"></i>VERIFIKASI LAGI
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
+// ============================================================
+//  PRODUCT DATABASE
+// ============================================================
 const products = [
-    { 
-        id: 1, 
-        name: "MUNDIÉ Signature Shirt", 
-        price: 117428, 
+    {
+        id: 1,
+        name: "MUNDIÉ Signature Shirt",
+        price: 117428,
         img: "assets/bg.jpeg",
         imgs: [
             "assets/bg.jpeg",
@@ -286,35 +608,33 @@ const products = [
             "assets/depan.jpeg",
             "assets/display%202.jpeg"
         ],
-        desc: "Boxy Shirt MUNDIÉ dengan desain eksklusif dan material premium. Potongan modern yang memberikan kesan elegan dan sophisticated untuk setiap kesempatan. 100% cotton pilihan dengan detail jahitan tangan.", 
-        sizes: ["S","M","L","XL","XXL"] 
+        desc: "Boxy Shirt MUNDIÉ dengan desain eksklusif dan material premium. Potongan modern yang memberikan kesan elegan dan sophisticated untuk setiap kesempatan. 100% cotton pilihan dengan detail jahitan tangan.",
+        sizes: ["S","M","L","XL","XXL"]
     },
 ];
+
+const authDB = {
+    "MND-SS-001-A1B2": { ori: true, product: "MUNDIÉ Signature Shirt", sku: "SS-001", batch: "BATCH-2024-08", mfgDate: "Agustus 2024", factory: "Atelier MUNDIÉ — Semarang", chips: ["Cotton 100%","QC Passed","Handcrafted","Anti-Counterfeit"] },
+    "MND-SS-001-C3D4": { ori: true, product: "MUNDIÉ Signature Shirt", sku: "SS-001", batch: "BATCH-2024-09", mfgDate: "September 2024", factory: "Atelier MUNDIÉ — Semarang", chips: ["Cotton 100%","QC Passed","Handcrafted","Anti-Counterfeit"] },
+    "MND-SS-001-E5F6": { ori: true, product: "MUNDIÉ Signature Shirt", sku: "SS-001", batch: "BATCH-2025-01", mfgDate: "Januari 2025", factory: "Atelier MUNDIÉ — Semarang", chips: ["Cotton 100%","QC Passed","Handcrafted","Anti-Counterfeit"] },
+};
 
 let selectedProduct = null;
 let selectedSize = "";
 let selectedPayment = "";
 
 function formatPrice(p) { return "Rp " + p.toLocaleString("id-ID"); }
-
-// ✅ FIX: Helper untuk membuat elemen gambar dengan fallback icon jika gagal load
-function imgTag(src, alt, cls) {
-    return `<img 
-        src="${src}" 
-        alt="${alt || 'MUNDIÉ Product'}" 
-        class="${cls || ''}"
-        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-        style="width:100%;height:100%;object-fit:cover;display:block;"
-    /><span class="fallback-icon" style="display:none;">👔</span>`;
+function imgTag(src, alt) {
+    return `<img src="${src}" alt="${alt||'MUNDIÉ'}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" style="width:100%;height:100%;object-fit:cover;display:block;"/><span class="fallback-icon" style="display:none;">👔</span>`;
 }
 
-// ✅ FIX: renderProducts sekarang menggunakan <img> tag yang benar
+// ============================================================
+//  PRODUCTS RENDER
+// ============================================================
 function renderProducts() {
     document.getElementById("productsGrid").innerHTML = products.map(p => `
         <div class="product-card" onclick="openProduct(${p.id})">
-            <div class="product-img">
-                ${imgTag(p.img, p.name)}
-            </div>
+            <div class="product-img">${imgTag(p.img, p.name)}</div>
             <div class="product-info">
                 <h3>${p.name}</h3>
                 <div class="price">${formatPrice(p.price)}</div>
@@ -323,6 +643,260 @@ function renderProducts() {
     `).join("");
 }
 
+// ============================================================
+//  AI SIZE RECOMMENDATION — GEMINI API
+//  Ganti GEMINI_API_KEY dengan key Anda dari Google AI Studio
+// ============================================================
+const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
+
+async function callGeminiAI(bb, tb, fit, context) {
+    const fitLabel = { regular: "regular/boxy (sesuai tren MUNDIÉ)", oversize: "extra oversize lebih longgar", slim: "slim/pas badan" }[fit] || "regular";
+    const prompt = `Kamu adalah fashion advisor ahli untuk brand MUNDIÉ, brand fashion luxury boxy shirt asal Indonesia.
+
+Data pembeli:
+- Berat badan: ${bb} kg
+- Tinggi badan: ${tb} cm
+- Preferensi fit: ${fitLabel}
+- Konteks: ${context || "pembelian online"}
+
+Size chart MUNDIÉ Signature Shirt (boxy cut):
+- S: untuk BB 45-55 kg, TB 155-165 cm
+- M: untuk BB 55-70 kg, TB 165-175 cm  
+- L: untuk BB 70-85 kg, TB 170-182 cm
+- XL: untuk BB 85-100 kg, TB 178-188 cm
+- XXL: untuk BB 100-120 kg, TB 185-195 cm
+
+Berikan rekomendasi ukuran yang PALING TEPAT. Respond HANYA dalam format JSON ini (tanpa markdown, tanpa backtick):
+{"size":"M","reason":"Penjelasan singkat 1-2 kalimat kenapa ukuran ini cocok","tip":"Tips styling singkat untuk MUNDIÉ boxy shirt"}`;
+
+    const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.3, maxOutputTokens: 300 }
+            })
+        }
+    );
+
+    if (!response.ok) throw new Error("Gemini API error: " + response.status);
+    const data = await response.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    // strip any markdown fences just in case
+    const clean = raw.replace(/```json|```/g, "").trim();
+    return JSON.parse(clean);
+}
+
+// Fallback logic jika API key belum diset
+function localSizeLogic(bb, tb, fit) {
+    let bmi = bb / ((tb / 100) ** 2);
+    let size;
+    if (bb <= 55 && tb <= 165) size = "S";
+    else if (bb <= 70 && tb <= 175) size = "M";
+    else if (bb <= 85 && tb <= 182) size = "L";
+    else if (bb <= 100 && tb <= 188) size = "XL";
+    else size = "XXL";
+
+    // Adjust for fit preference
+    const sizeOrder = ["S","M","L","XL","XXL"];
+    let idx = sizeOrder.indexOf(size);
+    if (fit === "oversize" && idx < sizeOrder.length - 1) idx++;
+    if (fit === "slim" && idx > 0) idx--;
+    size = sizeOrder[idx];
+
+    const reasons = {
+        S: `Dengan BB ${bb} kg dan TB ${tb} cm, ukuran S memberikan fit boxy yang proporsional di tubuh Anda.`,
+        M: `Dengan BB ${bb} kg dan TB ${tb} cm, ukuran M adalah pilihan ideal — cukup longgar untuk boxy look tanpa terlihat kebesaran.`,
+        L: `Dengan BB ${bb} kg dan TB ${tb} cm, ukuran L memberikan ruang yang nyaman dengan siluet boxy MUNDIÉ yang khas.`,
+        XL: `Dengan BB ${bb} kg dan TB ${tb} cm, ukuran XL memastikan kenyamanan maksimal dengan tampilan structured boxy.`,
+        XXL: `Dengan BB ${bb} kg dan TB ${tb} cm, ukuran XXL adalah pilihan terbaik untuk fit yang nyaman dan gaya boxy oversized.`,
+    };
+    return {
+        size,
+        reason: reasons[size],
+        tip: "Padukan dengan celana slim atau tapered untuk kontras yang stylish dengan siluet boxy MUNDIÉ."
+    };
+}
+
+// ============================================================
+//  BANNER AI — trigger dari section utama
+// ============================================================
+async function runBannerAI() {
+    const bb = parseFloat(document.getElementById("bannerBB").value);
+    const tb = parseFloat(document.getElementById("bannerTB").value);
+    const fit = document.getElementById("bannerFit").value;
+
+    if (!bb || !tb || bb < 30 || tb < 100) {
+        showToast("Masukkan berat dan tinggi badan yang valid");
+        return;
+    }
+
+    const btn = document.getElementById("btnBannerAI");
+    const spinner = document.getElementById("bannerSpinner");
+    const btnIcon = document.getElementById("bannerBtnIcon");
+    const btnText = document.getElementById("bannerBtnText");
+    const result  = document.getElementById("aiBannerResult");
+
+    btn.disabled = true;
+    spinner.classList.add("show");
+    btnIcon.style.display = "none";
+    btnText.textContent = "Menganalisis...";
+    result.classList.remove("show");
+
+    try {
+        let rec;
+        if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+            // Simulasi delay lalu pakai logika lokal
+            await new Promise(r => setTimeout(r, 1200));
+            rec = localSizeLogic(bb, tb, fit);
+        } else {
+            rec = await callGeminiAI(bb, tb, fit, "banner website");
+        }
+
+        document.getElementById("bannerResultSize").textContent = rec.size;
+        document.getElementById("bannerResultBody").textContent = rec.reason;
+        document.getElementById("bannerResultTip").textContent  = "💡 " + rec.tip;
+        result.classList.add("show");
+
+        // Smooth scroll ke result
+        result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    } catch(e) {
+        console.error(e);
+        showToast("Gagal menghubungi AI. Coba lagi.");
+    } finally {
+        btn.disabled = false;
+        spinner.classList.remove("show");
+        btnIcon.style.display = "";
+        btnText.textContent = "REKOMENDASIKAN";
+    }
+}
+
+// ============================================================
+//  PRODUCT MODAL — AI inside product detail
+// ============================================================
+function openProduct(id) {
+    selectedProduct = products.find(p => p.id === id);
+    selectedSize = "";
+    const imgs = selectedProduct.imgs;
+    openModal(`
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="product-detail">
+            <div class="slider-wrapper">
+                <div class="slider-track" id="sliderTrack">
+                    ${imgs.map(img => `<div class="slider-slide">${imgTag(img, selectedProduct.name)}</div>`).join("")}
+                </div>
+                <button class="slider-btn slider-prev" onclick="slideMove(-1)"><i class="fas fa-chevron-left"></i></button>
+                <button class="slider-btn slider-next" onclick="slideMove(1)"><i class="fas fa-chevron-right"></i></button>
+                <div class="slider-dots">
+                    ${imgs.map((_,i)=>`<span class="dot ${i===0?'active':''}" onclick="slideTo(${i})"></span>`).join("")}
+                </div>
+            </div>
+            <div class="product-detail-info">
+                <h2>${selectedProduct.name}</h2>
+                <div class="price">${formatPrice(selectedProduct.price)}</div>
+                <p class="desc">${selectedProduct.desc}</p>
+
+                <!-- AI SIZE RECOMMENDER (inside modal) -->
+                <div class="ai-size-rec">
+                    <div class="ai-size-rec-header">
+                        <i class="fas fa-robot"></i>
+                        <span>Rekomendasi Ukuran AI</span>
+                        <span class="ai-badge">AI</span>
+                    </div>
+                    <div class="ai-size-rec-body">
+                        <div class="ai-rec-inputs">
+                            <input type="number" id="modalBB" placeholder="BB (kg)" min="30" max="200">
+                            <input type="number" id="modalTB" placeholder="TB (cm)" min="100" max="250">
+                        </div>
+                        <button class="btn-ai-rec" id="btnModalAI" onclick="runModalAI()">
+                            <div class="ai-spinner" id="modalAISpinner"></div>
+                            <i class="fas fa-magic" id="modalAIIcon"></i>
+                            <span id="modalAIText">CARI UKURAN SAYA</span>
+                        </button>
+                        <div class="ai-rec-result" id="modalAIResult">
+                            <div class="ai-rec-size-badge" id="modalResultBadge"></div>
+                            <div class="ai-rec-explanation" id="modalResultExp"></div>
+                            <button class="ai-rec-apply-btn" id="modalApplyBtn" onclick="">
+                                <i class="fas fa-check" style="margin-right:6px;"></i>PAKAI UKURAN INI
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <label style="font-size:11px;letter-spacing:3px;color:var(--gray);margin-bottom:10px;display:block;">PILIH UKURAN</label>
+                <div class="size-options">
+                    ${selectedProduct.sizes.map(s=>`<button class="size-btn" id="sizeBtn_${s}" onclick="selectSize('${s}',this)">${s}</button>`).join("")}
+                </div>
+                <button class="btn-buy" onclick="goToCheckout()">BELI SEKARANG</button>
+            </div>
+        </div>
+    `);
+    currentSlide = 0;
+    initSliderTouch();
+}
+
+async function runModalAI() {
+    const bb = parseFloat(document.getElementById("modalBB").value);
+    const tb = parseFloat(document.getElementById("modalTB").value);
+
+    if (!bb || !tb || bb < 30 || tb < 100) {
+        showToast("Masukkan berat dan tinggi badan");
+        return;
+    }
+
+    const btn     = document.getElementById("btnModalAI");
+    const spinner = document.getElementById("modalAISpinner");
+    const icon    = document.getElementById("modalAIIcon");
+    const text    = document.getElementById("modalAIText");
+    const result  = document.getElementById("modalAIResult");
+
+    btn.disabled = true;
+    spinner.classList.add("show");
+    icon.style.display = "none";
+    text.textContent = "Menganalisis...";
+    result.classList.remove("show");
+
+    try {
+        let rec;
+        if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+            await new Promise(r => setTimeout(r, 1000));
+            rec = localSizeLogic(bb, tb, "regular");
+        } else {
+            rec = await callGeminiAI(bb, tb, "regular", "product modal");
+        }
+
+        document.getElementById("modalResultBadge").textContent = rec.size;
+        document.getElementById("modalResultExp").innerHTML = rec.reason + `<br><em style="color:var(--gold);font-size:11px;">💡 ${rec.tip}</em>`;
+
+        // Wire up apply button
+        document.getElementById("modalApplyBtn").onclick = function() {
+            const sizeBtn = document.getElementById("sizeBtn_" + rec.size);
+            if (sizeBtn) {
+                document.querySelectorAll(".size-btn").forEach(b => b.classList.remove("active"));
+                sizeBtn.classList.add("active");
+                selectedSize = rec.size;
+                showToast("Ukuran " + rec.size + " dipilih ✓");
+            }
+        };
+
+        result.classList.add("show");
+    } catch(e) {
+        console.error(e);
+        showToast("Gagal menghubungi AI. Coba lagi.");
+    } finally {
+        btn.disabled = false;
+        spinner.classList.remove("show");
+        icon.style.display = "";
+        text.textContent = "CARI UKURAN SAYA";
+    }
+}
+
+// ============================================================
+//  MODAL HELPERS
+// ============================================================
 function openModal(html) {
     document.getElementById("modalContent").innerHTML = html;
     document.getElementById("modalOverlay").classList.add("active");
@@ -333,73 +907,33 @@ function closeModal() {
     document.body.style.overflow = "";
 }
 
-// ✅ FIX: Slider slide sekarang menggunakan <img> tag yang benar
-function openProduct(id) {
-    selectedProduct = products.find(p => p.id === id);
-    selectedSize = "";
-    const imgs = selectedProduct.imgs;
-    openModal(`
-        <button class="modal-close" onclick="closeModal()">&times;</button>
-        <div class="product-detail">
-            <div class="slider-wrapper">
-                <div class="slider-track" id="sliderTrack">
-                    ${imgs.map(img => `
-                        <div class="slider-slide">
-                            ${imgTag(img, selectedProduct.name)}
-                        </div>
-                    `).join("")}
-                </div>
-                <button class="slider-btn slider-prev" onclick="slideMove(-1)"><i class="fas fa-chevron-left"></i></button>
-                <button class="slider-btn slider-next" onclick="slideMove(1)"><i class="fas fa-chevron-right"></i></button>
-                <div class="slider-dots">
-                    ${imgs.map((_, i) => `<span class="dot ${i===0?'active':''}" onclick="slideTo(${i})"></span>`).join("")}
-                </div>
-            </div>
-            <div class="product-detail-info">
-                <h2>${selectedProduct.name}</h2>
-                <div class="price">${formatPrice(selectedProduct.price)}</div>
-                <p class="desc">${selectedProduct.desc}</p>
-                <label style="font-size:11px;letter-spacing:3px;color:var(--gray);margin-bottom:10px;display:block;">PILIH UKURAN</label>
-                <div class="size-options">
-                    ${selectedProduct.sizes.map(s => `<button class="size-btn" onclick="selectSize('${s}', this)">${s}</button>`).join("")}
-                </div>
-                <button class="btn-buy" onclick="goToCheckout()">BELI SEKARANG</button>
-            </div>
-        </div>
-    `);
-    currentSlide = 0;
-    initSliderTouch();
-}
-
 let currentSlide = 0;
 function slideMove(dir) {
     const track = document.getElementById("sliderTrack");
-    const total = track.children.length;
-    currentSlide = (currentSlide + dir + total) % total;
+    currentSlide = (currentSlide + dir + track.children.length) % track.children.length;
     updateSlider();
 }
 function slideTo(i) { currentSlide = i; updateSlider(); }
 function updateSlider() {
     const track = document.getElementById("sliderTrack");
     track.style.transform = `translateX(-${currentSlide * 100}%)`;
-    document.querySelectorAll(".slider-dots .dot").forEach((d, i) => d.classList.toggle("active", i === currentSlide));
+    document.querySelectorAll(".slider-dots .dot").forEach((d,i) => d.classList.toggle("active", i===currentSlide));
 }
 function initSliderTouch() {
     const track = document.getElementById("sliderTrack");
-    let startX = 0, diff = 0;
-    track.addEventListener("touchstart", e => { startX = e.touches[0].clientX; });
-    track.addEventListener("touchmove", e => { diff = e.touches[0].clientX - startX; });
-    track.addEventListener("touchend", () => { if (Math.abs(diff) > 50) { slideMove(diff > 0 ? -1 : 1); } diff = 0; });
-    let dragging = false;
-    track.addEventListener("mousedown", e => { dragging = true; startX = e.clientX; diff = 0; e.preventDefault(); });
-    track.addEventListener("mousemove", e => { if (dragging) diff = e.clientX - startX; });
-    track.addEventListener("mouseup", () => { if (dragging) { if (Math.abs(diff) > 50) slideMove(diff > 0 ? -1 : 1); dragging = false; diff = 0; } });
-    track.addEventListener("mouseleave", () => { dragging = false; diff = 0; });
+    let startX=0, diff=0, dragging=false;
+    track.addEventListener("touchstart", e=>{ startX=e.touches[0].clientX; });
+    track.addEventListener("touchmove",  e=>{ diff=e.touches[0].clientX-startX; });
+    track.addEventListener("touchend",   ()=>{ if(Math.abs(diff)>50) slideMove(diff>0?-1:1); diff=0; });
+    track.addEventListener("mousedown",  e=>{ dragging=true; startX=e.clientX; diff=0; e.preventDefault(); });
+    track.addEventListener("mousemove",  e=>{ if(dragging) diff=e.clientX-startX; });
+    track.addEventListener("mouseup",    ()=>{ if(dragging&&Math.abs(diff)>50) slideMove(diff>0?-1:1); dragging=false; diff=0; });
+    track.addEventListener("mouseleave", ()=>{ dragging=false; diff=0; });
 }
 
 function selectSize(size, el) {
     selectedSize = size;
-    document.querySelectorAll(".size-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".size-btn").forEach(b=>b.classList.remove("active"));
     el.classList.add("active");
 }
 
@@ -424,10 +958,10 @@ function goToCheckout() {
             <div class="form-group">
                 <label>Metode Pembayaran</label>
                 <div class="payment-options">
-                    <div class="payment-opt" onclick="selectPayment('BCA Transfer', this)">BCA Transfer</div>
-                    <div class="payment-opt" onclick="selectPayment('Mandiri Transfer', this)">Mandiri Transfer</div>
-                    <div class="payment-opt" onclick="selectPayment('GoPay', this)">GoPay</div>
-                    <div class="payment-opt" onclick="selectPayment('OVO', this)">OVO</div>
+                    <div class="payment-opt" onclick="selectPayment('BCA Transfer',this)">BCA Transfer</div>
+                    <div class="payment-opt" onclick="selectPayment('Mandiri Transfer',this)">Mandiri Transfer</div>
+                    <div class="payment-opt" onclick="selectPayment('GoPay',this)">GoPay</div>
+                    <div class="payment-opt" onclick="selectPayment('OVO',this)">OVO</div>
                 </div>
             </div>
             <button class="btn-pay" onclick="processPayment()">BAYAR SEKARANG</button>
@@ -437,36 +971,41 @@ function goToCheckout() {
 
 function selectPayment(method, el) {
     selectedPayment = method;
-    document.querySelectorAll(".payment-opt").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".payment-opt").forEach(b=>b.classList.remove("active"));
     el.classList.add("active");
 }
 
 function processPayment() {
-    const name = document.getElementById("cName").value.trim();
-    const phone = document.getElementById("cPhone").value.trim();
-    const email = document.getElementById("cEmail").value.trim();
+    const name    = document.getElementById("cName").value.trim();
+    const phone   = document.getElementById("cPhone").value.trim();
+    const email   = document.getElementById("cEmail").value.trim();
     const address = document.getElementById("cAddress").value.trim();
-    if (!name || !phone || !email || !address) { showToast("Lengkapi semua data"); return; }
+    if (!name||!phone||!email||!address) { showToast("Lengkapi semua data"); return; }
     if (!selectedPayment) { showToast("Pilih metode pembayaran"); return; }
 
-    const orderNo = "MND-" + Date.now().toString().slice(-8);
-    const trackNo = "JNE" + Math.random().toString(36).substring(2, 12).toUpperCase();
-    const today = new Date();
-    const estDate = new Date(today.getTime() + 3 * 86400000);
-    const formatDate = d => d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    const authCode = generateAuthCode();
+    const orderNo  = "MND-" + Date.now().toString().slice(-8);
+    const trackNo  = "JNE" + Math.random().toString(36).substring(2,12).toUpperCase();
+    const today    = new Date();
+    const estDate  = new Date(today.getTime() + 3*86400000);
+    const fmtDate  = d => d.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"});
+
+    authDB[authCode] = {
+        ori: true, product: selectedProduct.name, sku: "SS-001",
+        batch: "BATCH-LIVE-" + orderNo, mfgDate: fmtDate(today),
+        factory: "Atelier MUNDIÉ — Semarang",
+        chips: ["Cotton 100%","QC Passed","Handcrafted","Anti-Counterfeit"]
+    };
 
     openModal(`
         <button class="modal-close" onclick="closeModal()">&times;</button>
         <div class="receipt-container">
             <div class="receipt">
-                <div class="receipt-header">
-                    <h2>MUNDIÉ</h2>
-                    <p>INVOICE & SHIPPING RECEIPT</p>
-                </div>
+                <div class="receipt-header"><h2>MUNDIÉ</h2><p>INVOICE & SHIPPING RECEIPT</p></div>
                 <div class="receipt-section">
                     <h4>Detail Pesanan</h4>
                     <div class="receipt-row"><span>No. Order</span><span>${orderNo}</span></div>
-                    <div class="receipt-row"><span>Tanggal</span><span>${formatDate(today)}</span></div>
+                    <div class="receipt-row"><span>Tanggal</span><span>${fmtDate(today)}</span></div>
                     <div class="receipt-row"><span>Status</span><span style="color:green;">✓ LUNAS</span></div>
                 </div>
                 <div class="receipt-section">
@@ -487,12 +1026,19 @@ function processPayment() {
                     <div class="receipt-row"><span>Email</span><span>${email}</span></div>
                     <div class="receipt-row"><span>Alamat</span><span style="text-align:right;max-width:250px;">${address}</span></div>
                 </div>
+                <div class="receipt-section">
+                    <h4>🔐 Kode Autentikasi Produk</h4>
+                    <div class="receipt-row">
+                        <span>Kode Unik</span>
+                        <span style="font-family:monospace;font-weight:bold;color:#b8860b;letter-spacing:2px;">${authCode}</span>
+                    </div>
+                    <p style="font-size:11px;color:#666;margin-top:8px;line-height:1.7;">Simpan kode ini. Gunakan fitur <strong>CEK KEASLIAN</strong> di website kami untuk memverifikasi produk Anda kapan saja.</p>
+                    <div id="receiptQR" style="margin:16px auto;text-align:center;"></div>
+                    <p style="font-size:10px;color:#888;text-align:center;letter-spacing:2px;">SCAN QR CODE UNTUK VERIFIKASI</p>
+                </div>
                 <div class="shipping-info">
                     <h4>📦 INFORMASI PENGIRIMAN</h4>
-                    <p><strong>Kurir:</strong> JNE Regular<br>
-                    <strong>No. Resi:</strong> ${trackNo}<br>
-                    <strong>Estimasi Tiba:</strong> ${formatDate(estDate)}<br>
-                    <strong>Dikirim ke:</strong> ${address}</p>
+                    <p><strong>Kurir:</strong> JNE Regular<br><strong>No. Resi:</strong> ${trackNo}<br><strong>Estimasi Tiba:</strong> ${fmtDate(estDate)}<br><strong>Dikirim ke:</strong> ${address}</p>
                 </div>
                 <div class="receipt-barcode">
                     <div class="bars">|||||||||||||||||||||||||||||||</div>
@@ -502,21 +1048,157 @@ function processPayment() {
             <button class="btn-done" onclick="closeModal()">SELESAI</button>
         </div>
     `);
+
+    setTimeout(() => {
+        const el = document.getElementById("receiptQR");
+        if (el && typeof QRCode !== "undefined") {
+            new QRCode(el, { text: authCode, width: 120, height: 120, colorDark: "#1a1a1a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+        }
+    }, 300);
+}
+
+function generateAuthCode() {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const rand4 = () => Array.from({length:4}, ()=>chars[Math.floor(Math.random()*chars.length)]).join("");
+    return `MND-SS-001-${rand4()}`;
+}
+
+// ============================================================
+//  VERIFY MODAL
+// ============================================================
+let cameraStream = null;
+let qrScanInterval = null;
+
+function openVerifyModal() {
+    document.getElementById("verifyOverlay").classList.add("active");
+    document.body.style.overflow = "hidden";
+    resetVerify();
+}
+function closeVerifyModal() {
+    stopCamera();
+    document.getElementById("verifyOverlay").classList.remove("active");
+    document.body.style.overflow = "";
+}
+
+function switchVerifyTab(tab) {
+    document.getElementById("tabQR").classList.toggle("active", tab==="qr");
+    document.getElementById("tabCode").classList.toggle("active", tab==="code");
+    document.getElementById("panelQR").classList.toggle("active", tab==="qr");
+    document.getElementById("panelCode").classList.toggle("active", tab==="code");
+    if (tab !== "qr") stopCamera();
+    resetResult();
+}
+
+async function startCamera() {
+    const status = document.getElementById("qrStatus");
+    const btn = document.getElementById("btnStartCam");
+    status.textContent = "Mengakses kamera...";
+    btn.disabled = true;
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width:{ideal:1280}, height:{ideal:720} } });
+        cameraStream = stream;
+        const video = document.getElementById("qrVideo");
+        video.srcObject = stream; video.play();
+        status.textContent = "Kamera aktif — arahkan ke QR code";
+        btn.style.display = "none";
+        startQRScan();
+    } catch(e) {
+        status.textContent = "Kamera tidak dapat diakses. Gunakan tab 'Masukkan Kode'.";
+        btn.disabled = false;
+    }
+}
+
+function stopCamera() {
+    if (cameraStream) { cameraStream.getTracks().forEach(t=>t.stop()); cameraStream = null; }
+    if (qrScanInterval) { clearInterval(qrScanInterval); qrScanInterval = null; }
+    const video = document.getElementById("qrVideo");
+    if (video) video.srcObject = null;
+    const btn = document.getElementById("btnStartCam");
+    if (btn) { btn.style.display=""; btn.disabled=false; }
+    const status = document.getElementById("qrStatus");
+    if (status) status.textContent = "Kamera belum aktif";
+}
+
+function startQRScan() {
+    const video  = document.getElementById("qrVideo");
+    const canvas = document.getElementById("qrCanvas");
+    const ctx    = canvas.getContext("2d");
+    qrScanInterval = setInterval(() => {
+        if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+        if (code && code.data) {
+            document.getElementById("qrStatus").textContent = "QR terdeteksi: " + code.data;
+            stopCamera(); clearInterval(qrScanInterval);
+            runVerify(code.data.trim().toUpperCase());
+        }
+    }, 300);
+}
+
+function fillCode(code) { document.getElementById("productCodeInput").value = code; }
+function checkProductCode() {
+    const val = document.getElementById("productCodeInput").value.trim().toUpperCase();
+    if (!val) { showToast("Masukkan kode produk terlebih dahulu"); return; }
+    runVerify(val);
+}
+
+function runVerify(code) {
+    resetResult();
+    document.getElementById("verifyLoading").classList.add("show");
+    setTimeout(() => {
+        document.getElementById("verifyLoading").classList.remove("show");
+        const entry = authDB[code];
+        if (!entry) showResult("notfound", code);
+        else if (entry.ori) showResult("ori", code, entry);
+        else showResult("fake", code, entry);
+    }, 1400);
+}
+
+function showResult(type, code, data) {
+    const el = document.getElementById("verifyResult");
+    el.className = "verify-result show result-" + type;
+    document.getElementById("resultIcon").textContent = type==="ori" ? "✅" : type==="fake" ? "❌" : "⚠️";
+    document.getElementById("resultBadge").textContent = type==="ori" ? "PRODUK ORIGINAL" : type==="fake" ? "PRODUK TIDAK TERVERIFIKASI" : "KODE TIDAK DITEMUKAN";
+    document.getElementById("resultName").textContent = data?.product || "Tidak ditemukan di database";
+    document.getElementById("resultCode").textContent = code;
+    if (type==="ori") {
+        document.getElementById("resultDetail").innerHTML = `<span>Batch:</span> ${data.batch}<br><span>Diproduksi:</span> ${data.mfgDate}<br><span>Fasilitas:</span> ${data.factory}`;
+        document.getElementById("resultChips").innerHTML = data.chips.map(c=>`<span class="result-chip ok"><i class="fas fa-check" style="margin-right:4px;font-size:10px;"></i>${c}</span>`).join("");
+    } else if (type==="fake") {
+        document.getElementById("resultDetail").innerHTML = `Kode ini terdaftar namun menunjukkan tanda-tanda <span style="color:#e57373;">tidak valid</span>. Harap hubungi MUNDIÉ.`;
+        document.getElementById("resultChips").innerHTML = "";
+    } else {
+        document.getElementById("resultDetail").innerHTML = `Kode <span>${code}</span> tidak terdaftar. Kemungkinan produk palsu atau kode salah.<br><br>Hubungi: <span>mundieproject@gmail.com</span> atau <span>+62 822-2545-7724</span>.`;
+        document.getElementById("resultChips").innerHTML = "";
+    }
+    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function resetResult() {
+    document.getElementById("verifyResult").className = "verify-result";
+    document.getElementById("verifyLoading").classList.remove("show");
+}
+
+function resetVerify() {
+    stopCamera(); resetResult();
+    const inp = document.getElementById("productCodeInput");
+    if (inp) inp.value = "";
+    switchVerifyTab("qr");
 }
 
 function showToast(msg) {
     const t = document.getElementById("toast");
     t.textContent = msg; t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 2500);
+    setTimeout(()=>t.classList.remove("show"), 2500);
 }
 
-document.getElementById("modalOverlay").addEventListener("click", function(e) {
-    if (e.target === this) closeModal();
-});
+document.getElementById("modalOverlay").addEventListener("click", function(e){ if(e.target===this) closeModal(); });
+document.getElementById("verifyOverlay").addEventListener("click", function(e){ if(e.target===this) closeVerifyModal(); });
 
 renderProducts();
-
-
 </script>
 </body>
 </html>
+
